@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+        .chat-container {
+            width: 80%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+        .chat-box {
+            border: 1px solid #ddd;
+            background-color: #fff;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin-bottom: 5px;
+            display: flex;
+        }
+        .message span {
+            font-weight: bold;
+        }
+        .message.my-message {
+            justify-content: flex-end;
+            text-align: right;
+        }
+        .message.other-message {
+            justify-content: flex-start;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .input-container button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .input-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box"></div>
+        <div class="typing-status" id="typing-status"></div>
+        <div class="input-container">
+            <input type="text" id="message" placeholder="Type a message">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+            const socket = io();
+    const chatRoomId = "{{ chat_room_id }}";
+    const name = "{{ name }}";
+
+    // Join the room and load chat history
+    socket.emit("join_room", { chat_room_id: chatRoomId, name: name });
+
+    // Handle username taken error
+    socket.on("username_taken", (data) => {
+        alert(data.error);
+        window.location.href = "/";
+    });
+
+        // Load chat history
+        socket.on("chat_history", (data) => {
+            const chatBox = document.getElementById("chat-box");
+            data.history.forEach((message) => {
+                const sender = message[0];
+                const text = message[1];
+                const timestamp = message[2];
+                const messageClass = sender === name ? 'my-message' : 'other-message';
+                chatBox.innerHTML += `<div class="message ${messageClass}"><span>${sender}</span> [${timestamp}]: ${text}</div>`;
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        // Announce new joiners
+        socket.on("join_announcement", (message) => {
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<div class="message other-message"><em>${message}</em></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+        
+        socket.on("leave_announcement", (message) => {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML += `<div class="message"><em>${message}</em></div>`;
+        });
+
+        // Display new messages
+        socket.on("receive_message", (data) => {
+            const chatBox = document.getElementById("chat-box");
+            const messageClass = data.sender === name ? 'my-message' : 'other-message';
+            chatBox.innerHTML += `<div class="message ${messageClass}"><span>${data.sender}</span>: ${data.message}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        // Send a new message
+        function sendMessage() {
+            const message = document.getElementById("message").value;
+            if (message) {
+                socket.emit("send_message", { chat_room_id: chatRoomId, sender: name, message: message });
+                document.getElementById("message").value = "";
+            }
+        }
+        
+        const typingTimeout = 3000; // 3 seconds timeout
+let typingTimer;
+
+document.getElementById("message").addEventListener("input", () => {
+    clearTimeout(typingTimer);
+    socket.emit("start_typing", { chat_room_id: chatRoomId, name: name });
+    typingTimer = setTimeout(() => {
+        socket.emit("stop_typing", { chat_room_id: chatRoomId, name: name });
+    }, typingTimeout);
+});
+
+socket.on("typing_status", (data) => {
+    const typingStatus = document.getElementById("typing-status");
+    typingStatus.innerHTML = data.status;
+});
+    </script>
+</body>
+</html>
