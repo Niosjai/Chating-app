@@ -30,7 +30,7 @@ jobs:
     # Step 4: Run the Python web app on 0.0.0.0:5000
     - name: Run the web app
       run: |
-        nohup python main.py &  # Start the app in the background and keep it running
+        nohup python app.py &  # Start the app in the background and keep it running
 
     # Step 5: Install ngrok
     - name: Install ngrok
