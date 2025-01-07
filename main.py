@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit, join_room, disconnect
 from flask_cors import CORS
 import sqlite3
 from datetime import datetime
+import requests
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "your_secret_key"
@@ -104,10 +105,58 @@ def handle_disconnect():
         if not active_rooms[chat_room_id]:
             del active_rooms[chat_room_id]
 
+# Replace with your actual Gemini API key
+GEMINI_API_KEY = "AIzaSyD8benFClKMkil2awLA9nWCwu_z76wIcbE"
+
 @socketio.on("send_message")
 def handle_send_message_event(data):
-    save_message(data["chat_room_id"], data["sender"], data["message"])
-    emit("receive_message", data, to=data["chat_room_id"])
+    message = data["message"]
+    chat_room_id = data["chat_room_id"]
+    sender = data["sender"]
+
+    # Save the original message
+    save_message(chat_room_id, sender, message)
+
+    # Emit the original message to the room
+    emit("receive_message", data, to=chat_room_id)
+
+    # Check if the message mentions @google
+    if "@google" in message:
+        query = message.replace("@google", "").strip()
+        gemini_response = get_gemini_response(query)
+        
+        if gemini_response:
+            gemini_data = {
+                "chat_room_id": chat_room_id,
+                "sender": "Google Gemini",
+                "message": gemini_response
+            }
+            save_message(chat_room_id, "Google Gemini", gemini_response)
+            emit("receive_message", gemini_data, to=chat_room_id)
+
+def get_gemini_response(query):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "contents": [{
+            "parts": [{"text": query}]
+        }]
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        print("Gemini API Response:", response.json())  # Log the full response for debugging
+        response_data = response.json()
+
+        # Extract the generated text from the updated response structure
+        if "candidates" in response_data and len(response_data["candidates"]) > 0:
+            return response_data["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except Exception as e:
+        print(f"Error fetching Gemini response: {e}")
+
+    return "Sorry, I couldn't process your request."
 
 typing_users = {}
 
