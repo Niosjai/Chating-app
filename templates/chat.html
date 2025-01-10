@@ -7,76 +7,257 @@
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f4f4f9;
-        }
-        .chat-container {
-            width: 80%;
-            max-width: 600px;
-            margin-top: 20px;
-        }
-        .chat-box {
-            border: 1px solid #ddd;
-            background-color: #fff;
-            padding: 10px;
-            height: 400px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
-        .message {
-            margin-bottom: 5px;
-            display: flex;
-        }
-        .message span {
-            font-weight: bold;
-        }
-        .message.my-message {
-            justify-content: flex-end;
-            text-align: right;
-        }
-        .message.other-message {
-            justify-content: flex-start;
-        }
-        .input-container {
-            display: flex;
-            gap: 10px;
-        }
-        .input-container input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .input-container button {
-            padding: 10px 15px;
-            border: none;
-            background-color: #007BFF;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .input-container button:hover {
-            background-color: #0056b3;
-        }
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.header {
+    background-color: #121212;
+    padding: 5px 10px; /* Reduced padding for a slimmer bar */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 16px; /* Adjust font size for a more compact look */
+    position: fixed; /* Keeps the header fixed at the top */
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 40px; /* Define a slimmer height */
+}
+
+.header button {
+    background-color: #0056b3;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    width: 35px;
+    height: 35px;
+    text-align: center;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.chat-box {
+    flex: 1;
+    padding: 10px;
+    background-color: #121212;
+    overflow-y: auto; /* Makes the chat-box scrollable */
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 40px; /* Matches the height of the header */
+    margin-bottom: 50px; /* Matches the height of the input container */
+}
+
+
+.message {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 3px;
+}
+
+.my-message {
+    align-items: flex-end;
+}
+
+.other-message {
+    align-items: flex-start;
+}
+
+.sender-name {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #ccc; /* Adjust color for the name */
+}
+
+.bubble {
+    padding: 10px 15px;
+    border-radius: 20px;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.my-message .bubble {
+    background-color: #007BFF;
+    color: white;
+}
+
+.other-message .bubble {
+    background-color: #333;
+    color: white;
+}
+
+.typing-status {
+    padding: 5px 10px;
+    font-size: 14px;
+    color: #aaa;
+    background-color: #121212;
+    text-align: left;
+}
+
+.input-container {
+    display: flex;
+    padding: 8px 12px; /* Balanced padding for comfortable spacing */
+    gap: 10px; /* Moderate gap between the input and button */
+    background-color: #121212;
+    position: fixed; /* Keeps the input bar fixed at the bottom */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 45px; /* Adjusted height for a proportional look */
+    align-items: center; /* Ensures vertical alignment of elements */
+    border-top: 1px solid #333; /* Adds a clean dividing line at the top */
+}
+
+.input-container input {
+    flex: 1;
+    padding: 8px; /* Comfortable padding for typing */
+    border: 1px solid #333;
+    border-radius: 5px;
+    background-color: #1e1e1e;
+    color: white;
+    font-size: 14px; /* Standard font size for readability */
+    outline: none; /* Removes outline on focus */
+}
+
+.input-container button {
+    padding: 8px 15px; /* Balanced padding for the button */
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px; /* Matches font size of input */
+    outline: none; /* Removes outline on focus */
+    transition: background-color 0.3s; /* Smooth hover effect */
+}
+
+.input-container button:hover {
+    background-color: #0056b3; /* Slightly darker on hover */
+}
+
+/* Modal for active users */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #222;
+    color: white;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+    width: 80%;
+    max-width: 300px;
+}
+
+.modal-content .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    color: white;
+}
+
+.modal-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.modal-content ul li {
+    padding: 5px;
+    border-bottom: 1px solid #444;
+    color: white;
+}
+
+.announcement {
+    text-align: center;
+    color: #ccc;
+    font-size: 14px;
+    margin: 10px 0;
+    font-style: italic;
+}
+
+#active-members {
+    display: flex;
+    align-items: center;
+    color: white;
+    font-size: 16px;
+}
+
+.green-dot {
+    width: 10px;
+    height: 10px;
+    background-color: green;
+    border-radius: 50%;
+    margin-left: 5px;
+}
     </style>
 </head>
 <body>
     <div class="chat-container">
+        <!-- Header Section -->
+        <div class="header">
+    <h3>ID: {{ chat_room_id }}</h3>
+    <div id="active-members">
+        Active <span id="active-count">0</span>
+        <span class="green-dot"></span>
+    </div>
+    <button id="show-users" onclick="showActiveUsers()">i</button>
+</div>
+
+        <!-- Chat Box Section -->
         <div class="chat-box" id="chat-box"></div>
+
+        <!-- Typing Status -->
         <div class="typing-status" id="typing-status"></div>
+
+        <!-- Input Section -->
         <div class="input-container">
             <input type="text" id="message" placeholder="Type a message">
             <button onclick="sendMessage()">Send</button>
         </div>
     </div>
 
+    <!-- Modal for Active Users -->
+    <div id="user-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Active Users</h3>
+            <ul id="user-list"></ul>
+        </div>
+    </div>
+
     <script>
-            const socket = io();
+    const socket = io(); // Declare socket only once
+
     const chatRoomId = "{{ chat_room_id }}";
     const name = "{{ name }}";
 
@@ -89,63 +270,146 @@
         window.location.href = "/";
     });
 
-        // Load chat history
-        socket.on("chat_history", (data) => {
-            const chatBox = document.getElementById("chat-box");
-            data.history.forEach((message) => {
-                const sender = message[0];
-                const text = message[1];
-                const timestamp = message[2];
-                const messageClass = sender === name ? 'my-message' : 'other-message';
-                chatBox.innerHTML += `<div class="message ${messageClass}"><span>${sender}</span> [${timestamp}]: ${text}</div>`;
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
+    function showActiveUsers() {
+        fetch(`/active_users1?chat_room_id=${chatRoomId}`)
+            .then(response => response.json())
+            .then(data => {
+                const userList = document.getElementById('user-list');
+                userList.innerHTML = '';
+                data.users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = user;
+                    userList.appendChild(li);
+                });
 
-        // Announce new joiners
-        socket.on("join_announcement", (message) => {
-            const chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML += `<div class="message other-message"><em>${message}</em></div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-        
-        socket.on("leave_announcement", (message) => {
+                // Show the modal
+                document.getElementById('user-modal').style.display = 'block';
+            })
+            .catch(err => console.error('Error fetching active users:', err));
+    }
+    
+    let lastSender = null;
+
+    function closeModal() {
+        document.getElementById('user-modal').style.display = 'none';
+    }
+
+    // Load chat history
+    socket.on("chat_history", (data) => {
         const chatBox = document.getElementById("chat-box");
-        chatBox.innerHTML += `<div class="message"><em>${message}</em></div>`;
+        data.history.forEach((message) => {
+            const sender = message[0];
+            const text = message[1];
+            const timestamp = message[2];
+            const messageClass = sender === name ? "my-message" : "other-message";
+            if (lastSender !== sender) {
+    chatBox.innerHTML += `
+        <div class="message ${messageClass}">
+            <div class="sender-name">${sender}</div>
+            <div class="bubble">${text}</div>
+        </div>`;
+    lastSender = sender; // Update the last sender
+} else {
+    chatBox.innerHTML += `
+        <div class="message ${messageClass}">
+            <div class="bubble">${text}</div>
+        </div>`;
+}
         });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
 
-        // Display new messages
-        socket.on("receive_message", (data) => {
-            const chatBox = document.getElementById("chat-box");
-            const messageClass = data.sender === name ? 'my-message' : 'other-message';
-            chatBox.innerHTML += `<div class="message ${messageClass}"><span>${data.sender}</span>: ${data.message}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
+    // Announce new joiners and leavers
+    // Function to update active user count
+function updateActiveMembers(count) {
+    const activeCount = document.getElementById("active-count");
+    activeCount.textContent = count;
+}
 
-        // Send a new message
-        function sendMessage() {
-            const message = document.getElementById("message").value;
-            if (message) {
-                socket.emit("send_message", { chat_room_id: chatRoomId, sender: name, message: message });
-                document.getElementById("message").value = "";
-            }
+// Handle join announcements with active user count
+socket.on("join_announcement", (data) => {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.innerHTML += `<div class="announcement">${data.message}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Update active members count
+    updateActiveMembers(data.active_count);
+});
+
+// Handle leave announcements with active user count
+socket.on("leave_announcement", (data) => {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.innerHTML += `<div class="announcement">${data.message}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Update active members count
+    updateActiveMembers(data.active_count);
+});
+
+// Show active users in a modal
+function showActiveUsers() {
+    fetch(`/active_users1?chat_room_id=${chatRoomId}`)
+        .then(response => response.json())
+        .then(data => {
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = '';
+            data.users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user;
+                userList.appendChild(li);
+            });
+
+            // Show the modal
+            document.getElementById('user-modal').style.display = 'block';
+        })
+        .catch(err => console.error('Error fetching active users:', err));
+}
+
+    // Display new messages
+    socket.on("receive_message", (data) => {
+        const chatBox = document.getElementById("chat-box");
+        const messageClass = data.sender === name ? "my-message" : "other-message";
+        if (lastSender !== data.sender) {
+    chatBox.innerHTML += `
+        <div class="message ${messageClass}">
+            <div class="sender-name">${data.sender}</div>
+            <div class="bubble">${data.message}</div>
+        </div>`;
+    lastSender = data.sender; // Update the last sender
+} else {
+    chatBox.innerHTML += `
+        <div class="message ${messageClass}">
+            <div class="bubble">${data.message}</div>
+        </div>`;
+}
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    // Send a new message
+    function sendMessage() {
+        const message = document.getElementById("message").value;
+        if (message) {
+            socket.emit("send_message", { chat_room_id: chatRoomId, sender: name, message: message });
+            document.getElementById("message").value = "";
         }
-        
-        const typingTimeout = 3000; // 3 seconds timeout
-let typingTimer;
+    }
 
-document.getElementById("message").addEventListener("input", () => {
-    clearTimeout(typingTimer);
-    socket.emit("start_typing", { chat_room_id: chatRoomId, name: name });
-    typingTimer = setTimeout(() => {
-        socket.emit("stop_typing", { chat_room_id: chatRoomId, name: name });
-    }, typingTimeout);
-});
+    // Typing status
+    const typingTimeout = 3000; // 3 seconds timeout
+    let typingTimer;
 
-socket.on("typing_status", (data) => {
-    const typingStatus = document.getElementById("typing-status");
-    typingStatus.innerHTML = data.status;
-});
-    </script>
+    document.getElementById("message").addEventListener("input", () => {
+        clearTimeout(typingTimer);
+        socket.emit("start_typing", { chat_room_id: chatRoomId, name: name });
+        typingTimer = setTimeout(() => {
+            socket.emit("stop_typing", { chat_room_id: chatRoomId, name: name });
+        }, typingTimeout);
+    });
+
+    socket.on("typing_status", (data) => {
+        const typingStatus = document.getElementById("typing-status");
+        typingStatus.innerHTML = data.status;
+    });
+</script>
 </body>
 </html>
